@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Minimalist Implementation of a BERT Sentence Classifier
 
 This repo is a minimalist implementation of a BERT Sentence Classifier.
@@ -101,3 +102,6 @@ tensorboard --logdir="experiments/lightning_logs/"
 
 ### Code Style:
 To make sure all the code follows the same style we use [Black](https://github.com/psf/black).
+=======
+# minibert-text-classification
+>>>>>>> aba6f3d1867cca71c35c599b448eb2f3e9fa033d
