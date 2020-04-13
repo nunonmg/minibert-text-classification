@@ -7,11 +7,11 @@ import torch
 import torch.nn as nn
 from torch import optim
 from torch.utils.data import DataLoader, RandomSampler
-from transformers import BertModel
+from transformers import AutoModel, AutoTokenizer
 
 import pytorch_lightning as pl
 from bert_tokenizer import BERTTextEncoder
-from dataloader import sentiment_analysis_dataset
+from dataloader import topic_finder_dataset
 from test_tube import HyperOptArgumentParser
 from torchnlp.encoders import LabelEncoder
 from torchnlp.utils import collate_tensors, lengths_to_mask
@@ -45,26 +45,26 @@ class BERTClassifier(pl.LightningModule):
 
     def __build_model(self) -> None:
         """ Init BERT model + tokenizer + classification head."""
-        self.bert = BertModel.from_pretrained(
-            "bert-base-uncased", output_hidden_states=True
+        self.bert = AutoModel.from_pretrained(
+            "google/bert_uncased_L-2_H-128_A-2", output_hidden_states=True
         )
 
         # Tokenizer
-        self.tokenizer = BERTTextEncoder("bert-base-uncased")
+        self.tokenizer = BERTTextEncoder("google/bert_uncased_L-2_H-128_A-2")
 
         # Label Encoder
         self.label_encoder = LabelEncoder(
-            self.hparams.label_set.split(","), reserved_labels=[]
+            self.hparams.label_set.split(";"), reserved_labels=[]
         )
         self.label_encoder.unknown_index = None
-
+        
         # Classification head
         self.classification_head = nn.Sequential(
-            nn.Linear(768, 1536),
-            nn.Tanh(),
-            nn.Linear(1536, 768),
-            nn.Tanh(),
-            nn.Linear(768, self.label_encoder.vocab_size),
+            nn.Linear(128, 256),
+            nn.ReLU(),
+            nn.Linear(512, 128),
+            nn.ReLU(),
+            nn.Linear(128, self.label_encoder.vocab_size),
         )
 
     def __build_loss(self):
@@ -155,15 +155,14 @@ class BERTClassifier(pl.LightningModule):
         """
         sample = collate_tensors(sample)
         tokens, lengths = self.tokenizer.batch_encode(sample["text"])
-
         inputs = {"tokens": tokens, "lengths": lengths}
 
         if not prepare_target:
             return inputs, {}
-
-        # Prepare target:
+        
+        #Prepare target:
         try:
-            targets = {"labels": self.label_encoder.batch_encode(sample["label"])}
+            targets = {"labels": self.label_encoder.batch_encode(sample["topic"])}
             return inputs, targets
         except RuntimeError:
             raise Exception("Label encoder found an unknown label.")
@@ -207,7 +206,6 @@ class BERTClassifier(pl.LightningModule):
 
         y = targets["labels"]
         y_hat = model_out["logits"]
-
         # acc
         labels_hat = torch.argmax(y_hat, dim=1)
         val_acc = torch.sum(y == labels_hat).item() / (len(y) * 1.0)
@@ -220,7 +218,7 @@ class BERTClassifier(pl.LightningModule):
         if self.trainer.use_dp or self.trainer.use_ddp2:
             loss_val = loss_val.unsqueeze(0)
             val_acc = val_acc.unsqueeze(0)
-
+        pdb.set_trace()
         output = OrderedDict({"val_loss": loss_val, "val_acc": val_acc,})
 
         # can also return just a scalar instead of a dict (return loss_val)
@@ -249,7 +247,6 @@ class BERTClassifier(pl.LightningModule):
                 val_acc = torch.mean(val_acc)
 
             val_acc_mean += val_acc
-
         val_loss_mean /= len(outputs)
         val_acc_mean /= len(outputs)
         tqdm_dict = {"val_loss": val_loss_mean, "val_acc": val_acc_mean}
@@ -279,7 +276,7 @@ class BERTClassifier(pl.LightningModule):
 
     def __retrieve_dataset(self, train=True, val=True, test=True):
         """ Retrieves task specific dataset """
-        return sentiment_analysis_dataset(self.hparams, train, val, test)
+        return topic_finder_dataset(self.hparams, train, val, test)
 
     @pl.data_loader
     def train_dataloader(self) -> DataLoader:
@@ -348,25 +345,25 @@ class BERTClassifier(pl.LightningModule):
         # Data Args:
         parser.add_argument(
             "--label_set",
-            default="pos,neg",
+            default="Social sciences and society;Sports and recreation;Natural sciences;Language and literature;Geography and places;Music;Media and drama;Art and architecture;Warfare;Engineering and technology;Video games;Philosophy and religion;Agriculture, food and drink;History;Mathematics;Miscellaneous",
             type=str,
             help="Classification labels set.",
         )
         parser.add_argument(
             "--train_csv",
-            default="data/imdb_reviews_train.csv",
+            default="data/train_data.csv",
             type=str,
             help="Path to the file containing the train data.",
         )
         parser.add_argument(
             "--dev_csv",
-            default="data/imdb_reviews_test.csv",
+            default="data/valid_data.csv",
             type=str,
             help="Path to the file containing the dev data.",
         )
         parser.add_argument(
             "--test_csv",
-            default="data/imdb_reviews_test.csv",
+            default="data/valid_data.csv",
             type=str,
             help="Path to the file containing the dev data.",
         )

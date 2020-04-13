@@ -126,7 +126,7 @@ if __name__ == "__main__":
 
     # Batching
     parser.add_argument(
-        "--batch_size", default=6, type=int, help="Batch size to be used."
+        "--batch_size", default=8, type=int, help="Batch size to be used."
     )
     parser.add_argument(
         "--accumulate_grad_batches",
@@ -137,7 +137,7 @@ if __name__ == "__main__":
     )
 
     # gpu args
-    parser.add_argument("--gpus", type=int, default=2, help="How many gpus")
+    parser.add_argument("--gpus", type=int, default=1, help="How many gpus")
     parser.add_argument(
         "--distributed_backend",
         type=str,
