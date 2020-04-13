@@ -1,24 +1,23 @@
-<<<<<<< HEAD
-# Minimalist Implementation of a BERT Sentence Classifier
+# Minimalist Implementation of a Mini-BERT for Text Classification
 
-This repo is a minimalist implementation of a BERT Sentence Classifier.
-The goal of this repo is to show how to combine 3 of my favourite libraries to supercharge your NLP research.
+This repo is a minimalist implementation of a Mini-BERT for Text Classification. As pretrained models are getting bigger and bigger, it is important to allow young researchers without many resources to try and experiment new architectures.
 
-My favourite libraries:
+This repo is based on [Minimalist Implementation of a BERT Sentence Classifier](https://github.com/ricardorei/lightning-text-classification) which is founded on the following libraries:
 - [PyTorch-Lightning](https://pytorch-lightning.readthedocs.io/en/latest/)
 - [Transformers](https://huggingface.co/transformers/index.html)
 - [PyTorch-NLP](https://pytorchnlp.readthedocs.io/en/latest/index.html)
 
+The datasets were originally downloaded from Assignment 1 of the course [Neural Networks for NLP](http://www.phontron.com/class/nn4nlp2020/assignments.html).
 
 ## Requirements:
 
-This project uses Python 3.6
+This project uses Python 3
 
 Create a virtual env with (outside the project folder):
 
 ```bash
-virtualenv -p python3.6 sbert-env
-source sbert-env/bin/activate
+virtualenv -p python3 minibert-env
+source minibert-env/bin/activate
 ```
 
 Install the requirements (inside the project folder):
@@ -102,6 +101,3 @@ tensorboard --logdir="experiments/lightning_logs/"
 
 ### Code Style:
 To make sure all the code follows the same style we use [Black](https://github.com/psf/black).
-=======
-# minibert-text-classification
->>>>>>> aba6f3d1867cca71c35c599b448eb2f3e9fa033d
